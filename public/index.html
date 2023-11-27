@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Chat.io</title>
+    <link rel="icon" type="image/x-icon" href="./favicon.png">
+</head>
+
+<body>
+    <div class="outer-card">
+        <div class="chat-card">
+            <div class="chat-header"> <code>Chat.io</code> <code id="username"></code> </div>
+
+            <div class="chat">
+                <div class="name-card">
+                    <input id="initialNameInput" placeholder="Your Name" autocomplete="off" class="name-input" />
+                    <button id="joinChat" class="join-btn">Join Chat</button>
+                </div>
+
+
+                <ul class="list">
+                    <p id="messages" class="messages"></p>
+                </ul>
+
+
+            </div>
+
+
+
+
+            <div class="group-input">
+                <input id="messageInput" autocomplete="off" class="chat-box" placeholder="Type a message..." />
+                <div class="upload-btn-wrapper">
+                    <button class="btn" title="Upload Files">&plus;</button>
+                    <input type="file" id="fileInput" name="myfile" onchange="sendFile()" />
+                </div>
+                <button id="send" class="send-btn">&#10148;</button>
+
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let ipaddress = '';
+        fetch('/get-ip').then(response => response.json()).then(data => {
+            ipaddress = data.ip;
+        })
+            .catch(error => {
+                console.error('Error fetching IP address:', error);
+            });
+
+        const socket = io(`http://${ipaddress}`);
+        let userName = '';
+
+        document.querySelector('.group-input').style.display = 'none';
+
+        document.querySelector('#joinChat').addEventListener('click', () => {
+            const initialNameInput = document.querySelector('#initialNameInput');
+            userName = initialNameInput.value.trim();
+            if (userName !== '' && userName != null && userName != undefined) {
+                document.querySelector('.name-card').style.display = 'none';
+                document.querySelector('.group-input').style.display = 'flex';
+                document.querySelector('#username').textContent = userName.charAt(0).toUpperCase()+userName.slice(1); 
+
+            }
+        });
+
+        function sendMessage() {
+            const messageInput = document.querySelector('#messageInput');
+            const message = messageInput.value.trim();
+            if (message !== '') {
+                socket.emit('chat message', { name: userName, message });
+                messageInput.value = '';
+            }
+        }
+
+        function sendFile() {
+            const fileInput = document.querySelector('#fileInput');
+            const file = fileInput.files[0];
+
+            if (file) {
+                let reader = new FileReader();
+                reader.onload = function (e) {
+                    let fileData = e.target.result;
+                    let fileInfo = {
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        data: fileData
+                    };
+                    socket.emit('chat message', { name: userName, file: fileInfo });
+                    fileInput.value = null;
+
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        document.querySelector('#send').addEventListener('click', () => {
+            sendMessage();
+        });
+
+        document.querySelector('#messageInput').addEventListener('keypress', function (event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+
+        // socket.on('chat message', (data) => {
+        //     console.log(data, 'socket');
+        //     const messages = document.querySelector('#messages');
+        //     const li = document.createElement('li');
+        //     if (data.file) {
+        //         const downloadLink = document.createElement('a');
+        //         downloadLink.href = data.file.data;
+        //         downloadLink.download = data.file.name;
+        //         downloadLink.textContent = `${data.file.name}`;
+        //         const messageSpan = document.createElement('div');
+        //         messageSpan.textContent = `${data.name}: ${downloadLink}`;
+        //         let textContent = `<div>${data.name} : <a href="${data.file.data}" download="${data.file.name}">${data.file.name}</a></div>`
+        //         li.innerHTML = textContent
+        //     } else {
+        //         const messageSpan = document.createElement('div');
+        //         messageSpan.textContent = `${data.name}: ${data.message}`;
+        //         li.appendChild(messageSpan);
+        //     }
+        //     messages.appendChild(li);
+        // });
+
+        // socket.on('chat message', (data) => {
+
+        //     const messages = document.querySelector('#messages');
+        //     const li = document.createElement('li');
+
+        //     if (data.file) {
+        //         const downloadLink = document.createElement('a');
+        //         downloadLink.href = data.file.data;
+        //         downloadLink.download = data.file.name;
+        //         downloadLink.textContent = `${data.file.name}`;
+
+
+        //         const messageSpan = document.createElement('div');
+        //         messageSpan.textContent = `${data.name}: `;
+        //         messageSpan.appendChild(downloadLink); // Append download link to message
+        //         if (data.name === userName) {
+        //             li.classList.add('sender'); // Apply sender class for current user's messages
+        //         } else {
+        //             li.classList.add('receiver'); // Apply receiver class for other user's messages
+        //         }
+        //         li.appendChild(messageSpan); // Append message to list item
+
+        //     } else {
+        //         const messageSpan = document.createElement('div');
+        //         messageSpan.textContent = `${data.name}: ${data.message}`;
+        //         if (data.name === userName) {
+        //             li.classList.add('sender'); // Apply sender class for current user's messages
+        //         } else {
+        //             li.classList.add('receiver'); // Apply receiver class for other user's messages
+        //         }
+        //         li.appendChild(messageSpan); // Append message to list item
+        //     }
+
+
+        //     messages.appendChild(li); // Append list item to message list
+        // });
+
+        socket.on('chat message', (data) => {
+            const messages = document.querySelector('#messages');
+            const li = document.createElement('li');
+            const messageSpan = document.createElement('div');
+
+            if (data.file) {
+                const downloadLink = document.createElement('a');
+                downloadLink.href = data.file.data;
+                downloadLink.download = data.file.name;
+                downloadLink.textContent = `${data.file.name}`;
+                messageSpan.textContent = `Download Url: `;
+                messageSpan.appendChild(downloadLink); // Append download link to message
+            } else {
+
+                messageSpan.textContent = `${data.message}`;
+            }
+            // Check if the message is from the current user or another user
+            if (data.name === userName) {
+                li.classList.add('sent'); // Apply sender class for current user's messages
+            } else {
+                li.classList.add('received'); // Apply receiver class for other user's messages
+            }
+
+            li.appendChild(messageSpan); // Append message to list item
+            messages.appendChild(li); // Append list item to message list
+        });
+
+
+    </script>
+</body>
+
+</html>

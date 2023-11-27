@@ -1,0 +1,21 @@
+{
+  "name": "chat-io",
+  "version": "1.0.0",
+  "description": "",
+  "bin": "index.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "pkg": {
+    "assets": [
+      "public/**/*"
+    ]
+  },
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "ip": "^1.1.8",
+    "socket.io": "^4.7.2"
+  }
+}
