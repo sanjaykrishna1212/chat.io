@@ -66,7 +66,7 @@
             if (userName !== '' && userName != null && userName != undefined) {
                 document.querySelector('.name-card').style.display = 'none';
                 document.querySelector('.group-input').style.display = 'flex';
-                document.querySelector('#username').textContent = userName.charAt(0).toUpperCase() + userName.slice(1);
+                document.querySelector('#username').textContent = userName.charAt(0).toUpperCase()+userName.slice(1); 
 
             }
         });
@@ -172,38 +172,20 @@
         // });
 
         socket.on('chat message', (data) => {
-            console.log(data,'data==>');
             const messages = document.querySelector('#messages');
             const li = document.createElement('li');
             const messageSpan = document.createElement('div');
-            
+
             if (data.file) {
                 const downloadLink = document.createElement('a');
                 downloadLink.href = data.file.data;
                 downloadLink.download = data.file.name;
                 downloadLink.textContent = `${data.file.name}`;
-
-                const messageSpan = document.createElement('div');
-                messageSpan.textContent = `${data.name}: ${downloadLink}`;
-                let textContent = `<div>${data.name!== userName?`${data.name} :`:''}  <a href="${data.file.data}" download="${data.file.name}">${data.file.name}</a></div>`
-                li.innerHTML = textContent
-
-                // if (data.name === userName && data.file) {
-                //     messageSpan.textContent = `${data.message}`;
-                // }
-                // else {
-                //     messageSpan.textContent = `${data.name} : ${data.message}`;
-                // }
-                // messageSpan.textContent = `Download Url: `;
+                messageSpan.textContent = `Download Url: `;
                 messageSpan.appendChild(downloadLink); // Append download link to message
-            }
-            else {
-                if (data.name === userName) {
-                    messageSpan.textContent = `${data.message}`;
-                }
-                else {
-                    messageSpan.textContent = `${data.name} : ${data.message}`;
-                }
+            } else {
+
+                messageSpan.textContent = `${data.message}`;
             }
             // Check if the message is from the current user or another user
             if (data.name === userName) {
@@ -211,8 +193,9 @@
             } else {
                 li.classList.add('received'); // Apply receiver class for other user's messages
             }
+
             li.appendChild(messageSpan); // Append message to list item
-            messages.appendChild(li);
+            messages.appendChild(li); // Append list item to message list
         });
 
 
